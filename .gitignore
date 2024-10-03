@@ -3,3 +3,5 @@ playground/
 **/__pycache__/
 
 **/data/
+
+**/output/

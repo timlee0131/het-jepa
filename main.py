@@ -2,7 +2,7 @@ import argparse
 from experiments import trainer, tuner
 
 def get_args():
-    parser = argparse.ArgumentParser(description="Graph Auto Encoder")
+    parser = argparse.ArgumentParser(description="Heterogeneous Graph JEPA")
 
     parser.add_argument('-m', '--mode', choices=['train', 'tune', 'test'], type=str, default='train', help='Mode: train, tune, test')
     
