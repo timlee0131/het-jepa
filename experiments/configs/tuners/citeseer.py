@@ -12,15 +12,15 @@ def get_config():
     )
     
     # dataset info
-    config.dataset = 'Cora'
-    config.num_features = 1433
-    config.num_classes = 7
+    config.dataset = 'CiteSeer'
+    config.num_features = 3703
+    config.num_classes = 6
     
     # creating the model
     config.loss_fn = 'mse'
-    config.hidden_channels = [256, 512, 1024]
-    config.out_channels = [256, 512, 1024]
-    config.z_dim = [64, 128, 256]
+    config.hidden_channels = [512, 1024, 2048, 3102]
+    config.out_channels = [512, 1024, 2408, 3102]
+    config.z_dim = [128, 256, 512]
     config.ema = 0.99
     config.target_percentage = 0.1
     config.pe_k = 4

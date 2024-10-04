@@ -12,15 +12,15 @@ def get_config():
     )
     
     # dataset info
-    config.dataset = 'Cora'
-    config.num_features = 1433
-    config.num_classes = 7
+    config.dataset = 'PubMed'
+    config.num_features = 500
+    config.num_classes = 3
     
     # creating the model
     config.loss_fn = 'mse'
-    config.hidden_channels = [256, 512, 1024]
-    config.out_channels = [256, 512, 1024]
-    config.z_dim = [64, 128, 256]
+    config.hidden_channels = [128, 256, 420]
+    config.out_channels = [128, 256, 420]
+    config.z_dim = [16, 32, 64, 128]
     config.ema = 0.99
     config.target_percentage = 0.1
     config.pe_k = 4

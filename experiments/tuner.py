@@ -41,9 +41,9 @@ def train(config, params, data, verbose=False):
     data, masked_data, target_nodes = data_preprocess(config, data)
     
     # set up encoders and predictor
-    context_encoder = ContextEncoder(config.num_features, params['hidden_channels'], params['out_channels'])
-    target_encoder = TargetEncoder(config.num_features, params['hidden_channels'], params['out_channels'])
-    predictor = Predictor(params['out_channels'], config.num_features, params['z_dim'])
+    context_encoder = ContextEncoder(config.num_features, params['hidden_channels'], params['hidden_channels'])
+    target_encoder = TargetEncoder(config.num_features, params['hidden_channels'], params['hidden_channels'])
+    predictor = Predictor(params['hidden_channels'], config.num_features, params['z_dim'])
     
     model = MP_JEPA(context_encoder, target_encoder, predictor)
     
@@ -80,7 +80,6 @@ def train(config, params, data, verbose=False):
 def tuning(trial: optuna.Trial, config, data):
     params = {
         'hidden_channels': trial.suggest_categorical('hidden_channels', config.hidden_channels),
-        'out_channels': trial.suggest_categorical('out_channels', config.out_channels),
         'z_dim': trial.suggest_categorical('z_dim', config.z_dim),
         'epochs': trial.suggest_categorical('epochs', config.epochs)
     }

@@ -14,6 +14,6 @@ trap 'sig_handler' SIGTERM SIGINT SIGCONT
 cd /users/hunjael/Projects/het-jepa/
 python -m pip install -r requirements.txt
 
-python main.py -m tune -d cora
+python main.py -m tune -d citeseer
 srun_pid=$!
 wait $srun_pid
