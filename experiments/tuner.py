@@ -47,7 +47,7 @@ def train(config, params, data, verbose=False):
     
     model = MP_JEPA(context_encoder, target_encoder, predictor)
     
-    optimizer = torch.optim.Adam(model.parameters(), lr=config.lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr=config.lr, weight_decay=1e-4)
     criterion = nn.CosineEmbeddingLoss() if config.loss_fn == 'cosine' else nn.MSELoss()
     lr_scheduler = CosineAnnealingLR(optimizer, T_max=params['epochs'], eta_min=config.min_lr)
     
@@ -99,7 +99,7 @@ def driver(config_name):
     data = get_dataset(config)
     
     study = optuna.create_study(direction='maximize')
-    study.optimize(lambda trial: tuning(trial, config, data), n_trials=10)
+    study.optimize(lambda trial: tuning(trial, config, data), n_trials=config.n_optuna)
     
     print("Best trial:")
     trial = study.best_trial

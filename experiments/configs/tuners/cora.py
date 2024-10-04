@@ -36,4 +36,7 @@ def get_config():
     config.eval_lr = 0.001
     config.eval_epochs = 10
     
+    # tuning parameters
+    config.n_optuna = 20
+    
     return config
