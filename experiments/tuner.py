@@ -45,7 +45,7 @@ def train(config, params, data, verbose=False):
     target_encoder = TargetEncoder(config.num_features, params['hidden_channels'], params['hidden_channels'])
     predictor = Predictor(params['hidden_channels'], config.num_features, params['z_dim'])
     
-    model = MP_JEPA(context_encoder, target_encoder, predictor)
+    model = MP_JEPA(context_encoder, target_encoder, predictor, z_dim=params['z_dim'], ema=config.ema)
     
     optimizer = torch.optim.Adam(model.parameters(), lr=config.lr, weight_decay=1e-4)
     criterion = nn.CosineEmbeddingLoss() if config.loss_fn == 'cosine' else nn.MSELoss()

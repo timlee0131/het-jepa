@@ -19,15 +19,15 @@ def get_config():
     # creating the model
     config.loss_fn = 'mse'
     config.hidden_channels = 1024
-    config.out_channels = 512
-    config.z_dim = 128
-    config.ema = 0.99
+    config.out_channels = 1024
+    config.z_dim = 64
+    config.ema = 0.999
     config.target_percentage = 0.1
     config.pe_k = 4
     
     # training settings
     config.runs = 1
-    config.epochs = 10
+    config.epochs = 200
     config.lr = 0.001
     config.min_lr = 0.0001
     

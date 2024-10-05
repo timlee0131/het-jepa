@@ -66,7 +66,7 @@ def linear_classifier_custom(config, pretrained_representations, data, verbose=F
     
     return avg_acc
 
-def linear_classifier(config, pretrained_representations, data, verbose=False):
+def linear_classifier(config, pretrained_representations, data, base=False, verbose=False):
     accuracy = 0
     for i in range(config.eval_runs):
         X_train = pretrained_representations[data.train_mask]
@@ -83,7 +83,10 @@ def linear_classifier(config, pretrained_representations, data, verbose=False):
     
     avg_acc = round(accuracy / config.runs, 3)
     if verbose:
-        avg_acc_c = colored(avg_acc, "green", attrs=["bold"])
-        print("linear classifier accuracy (MP-JEPA): ", avg_acc_c)
-    
+        if base:
+            avg_acc_c = colored(avg_acc, "green", attrs=["bold"])
+            print("linear classifier accuracy (Base): ", avg_acc_c)
+        else:
+            avg_acc_c = colored(avg_acc, "green", attrs=["bold"])
+            print("linear classifier accuracy (MP-JEPA): ", avg_acc_c)
     return avg_acc
