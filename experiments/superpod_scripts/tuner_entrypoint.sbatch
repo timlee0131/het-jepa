@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 #SBATCH -J test
-#SBATCH -o output/tuning/citeseer_tuning%j.out
+#SBATCH -o output/tuning/cora_tuning%j.out
 #SBATCH -c 16 --mem=82G   
 #SBATCH --nodes=1
 #SBATCH -G 1
