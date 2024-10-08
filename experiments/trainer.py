@@ -2,16 +2,19 @@ from models.encoders import ContextEncoder, TargetEncoder
 from models.evaluator import linear_classifier
 from models.predictor import Predictor
 from models.mp_jepa import MP_JEPA
-from experiments.utils import data_preprocess
+
+from experiments.utils import data_preprocess, sample_and_mask
+from experiments.loader import load, load_no_loader
 
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
 import torch
 import torch.nn as nn
-from torch_geometric.datasets import Planetoid
 
 import importlib
 from termcolor import colored, cprint
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def get_config(config_name):
     spec = importlib.util.spec_from_file_location("config", config_name)
@@ -20,29 +23,20 @@ def get_config(config_name):
     return module.get_config()
 
 def get_dataset(config):
-    dataset = None
-    if config.dataset == 'Cora':
-        dataset = Planetoid(root=config.data_dir, name='Cora')
-        dataset = dataset[0]
-    elif config.dataset == 'CiteSeer':
-        dataset = Planetoid(root=config.data_dir, name='CiteSeer')
-        dataset = dataset[0]
-    elif config.dataset == 'PubMed':
-        dataset = Planetoid(root=config.data_dir, name="PubMed")
-        dataset = dataset[0]
-    else:
-        cprint("invalid dataset...", "red")
+    dataset = load_no_loader(config.dataset, config.data_dir, config.pe_k).to(device)
     
     return dataset
 
 def train(config, data, verbose=False):
     # set up encoders and predictor
-    context_encoder = ContextEncoder(config.num_features, config.hidden_channels, config.out_channels)
-    target_encoder = TargetEncoder(config.num_features, config.hidden_channels, config.out_channels)
-    predictor = Predictor(config.out_channels + config.z_dim + config.pe_k * 2, config.out_channels)
+    context_encoder = ContextEncoder(config.num_features, config.hidden_channels, config.out_channels).to(device)
+    target_encoder = TargetEncoder(config.num_features, config.hidden_channels, config.out_channels).to(device)
+    predictor = Predictor(config.out_channels + config.z_dim * 2, config.out_channels).to(device)
     # predictor = Predictor(config.out_channels + config.pe_k, config.out_channels)
     
-    model = MP_JEPA(context_encoder, target_encoder, predictor, z_dim=config.z_dim, ema=config.ema)
+    model = MP_JEPA(context_encoder, target_encoder, predictor, z_dim=config.z_dim, ema=config.ema).to(device)
+    
+    pos_enc = data.laplacian_eigenvector_pe
     
     optimizer = torch.optim.Adam(model.parameters(), lr=config.lr)
     criterion = nn.CosineEmbeddingLoss() if config.loss_fn == 'cosine' else nn.MSELoss()
@@ -51,38 +45,44 @@ def train(config, data, verbose=False):
     epoch_logger_delta = config.epochs // 10
     epoch_logger_delta += 1 if epoch_logger_delta == 0 else 0
     
+    # data = loader[0]
+    
     model.train()
     for epoch in range(config.epochs):
-        if epoch % 50 == 0:
-            data, masked_data, target_nodes = data_preprocess(config, data)
-        
         model.train()
         optimizer.zero_grad()
         
-        pred, target_embeddings = model(data, masked_data, data.edge_index, target_nodes)
+        with torch.no_grad():
+            target_embedding = model.target_encoder(data.x, data.edge_index)
         
-        loss = 0
-        target_index = 0
-        for batch in pred:
-            batch_loss = 0
-            for pred_i in batch:
-                batch_loss += criterion(pred_i, target_embeddings[target_index].unsqueeze(0).detach())
+        # for data in loader:
+        # loss = 0
+        for i in range(config.accumulations):
+            target_nodes, masked_x = sample_and_mask(data.x, config.target_percentage)
             
-            batch_loss /= len(batch)
-            loss += batch_loss
-            target_index += 1
+            context_embedding = model.context_encoder(masked_x, data.edge_index)
+            
+            loss = model(data, context_embedding, target_embedding, target_nodes, criterion)
+            
+            loss.backward()
+            optimizer.step()
+    
+        # loss = 0
+        # for i, batch in enumerate(pred):
+        #     # batch_preds = torch.stack(batch)
+        #     target_embedding = target_embeddings[i].unsqueeze(0).repeat(batch.size(0), 1)
+            
+        #     # batch_loss = criterion(batch, target_embedding.detach())
+        #     loss += (batch_loss / (len(batch)))
+        lr_scheduler.step()
         
         if verbose:
             if epoch % epoch_logger_delta == 0:
-                epoch_c = colored(epoch, 'blue')
-                loss_c = colored(loss.item(), 'yellow')
+                epoch_c = colored(epoch, 'yellow')
+                loss_c = colored(round(loss.item(), 3), 'red')
                 print(f'Epoch: {epoch_c}, Loss: {loss_c}')
-        
-        loss.backward()
-        optimizer.step()
-        lr_scheduler.step()
-        
-        model.update_target_encoder()
+            
+        model.update_target_encoder()   
     
     return model
 

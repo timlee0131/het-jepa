@@ -27,9 +27,10 @@ def get_config():
     
     # training settings
     config.runs = 1
-    config.epochs = 200
+    config.epochs = 100
     config.lr = 0.001
     config.min_lr = 0.0001
+    config.accumulations = 10
     
     # eval settings
     config.eval_runs = 1

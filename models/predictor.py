@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 class Predictor(nn.Module):
-    def __init__(self, latent_channels, hidden_channels, z_dim=128):
+    def __init__(self, latent_channels, hidden_channels):
         super(Predictor, self).__init__()
         self.pred = nn.Sequential(
             nn.Linear(latent_channels, hidden_channels),
@@ -18,5 +18,5 @@ class Predictor(nn.Module):
     def reset_parameters(self):
         for p in self.pred:
             if isinstance(p, nn.Linear):
-                nn.init.xavier_normal_(p.weight)
+                nn.init.xavier_uniform_(p.weight)
                 nn.init.zeros_(p.bias)
