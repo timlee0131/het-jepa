@@ -14,7 +14,7 @@ import torch.nn as nn
 import importlib
 from termcolor import colored, cprint
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def get_config(config_name):
     spec = importlib.util.spec_from_file_location("config", config_name)
@@ -23,18 +23,18 @@ def get_config(config_name):
     return module.get_config()
 
 def get_dataset(config):
-    dataset = load_no_loader(config.dataset, config.data_dir, config.pe_k).to(device)
+    dataset = load_no_loader(config.dataset, config.data_dir, config.pe_k)
     
     return dataset
 
 def train(config, data, verbose=False):
     # set up encoders and predictor
-    context_encoder = ContextEncoder(config.num_features, config.hidden_channels, config.out_channels).to(device)
-    target_encoder = TargetEncoder(config.num_features, config.hidden_channels, config.out_channels).to(device)
-    predictor = Predictor(config.out_channels + config.z_dim * 2, config.out_channels).to(device)
+    context_encoder = ContextEncoder(config.num_features, config.hidden_channels, config.out_channels)
+    target_encoder = TargetEncoder(config.num_features, config.hidden_channels, config.out_channels)
+    predictor = Predictor(config.out_channels + config.z_dim * 2, config.out_channels)
     # predictor = Predictor(config.out_channels + config.pe_k, config.out_channels)
     
-    model = MP_JEPA(context_encoder, target_encoder, predictor, z_dim=config.z_dim, ema=config.ema).to(device)
+    model = MP_JEPA(context_encoder, target_encoder, predictor, z_dim=config.z_dim, ema=config.ema)
     
     pos_enc = data.laplacian_eigenvector_pe
     

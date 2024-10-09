@@ -12,7 +12,7 @@ class MP_JEPA(nn.Module):
         
         self.z = nn.Parameter(torch.Tensor(1, z_dim))
         nn.init.xavier_uniform_(self.z)
-        self.pe_projector = nn.Linear(4, z_dim, bias=False)
+        self.pe_projector = nn.Linear(8, z_dim, bias=False)
         
         self.z_dim = z_dim
         self.ema = ema

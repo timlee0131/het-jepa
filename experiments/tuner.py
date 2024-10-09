@@ -38,12 +38,11 @@ def get_dataset(config):
     return dataset
 
 def train(config, params, data, verbose=False):
-    data, masked_data, target_nodes = data_preprocess(config, data)
-    
     # set up encoders and predictor
     context_encoder = ContextEncoder(config.num_features, params['hidden_channels'], params['hidden_channels'])
     target_encoder = TargetEncoder(config.num_features, params['hidden_channels'], params['hidden_channels'])
-    predictor = Predictor(params['hidden_channels'], config.num_features, params['z_dim'])
+    # predictor = Predictor(params['hidden_channels'] + params['z_dim' + config.pe_k * 2], config.num_features, params['z_dim'])
+    predictor = Predictor(params['hidden_channels'] + params['z_dim'] + config.pe_k * 2, params['hidden_channels'])
     
     model = MP_JEPA(context_encoder, target_encoder, predictor, z_dim=params['z_dim'], ema=config.ema)
     
@@ -52,21 +51,34 @@ def train(config, params, data, verbose=False):
     lr_scheduler = CosineAnnealingLR(optimizer, T_max=params['epochs'], eta_min=config.min_lr)
     
     epoch_logger_delta = params['epochs'] // 10
+    epoch_logger_delta += 1 if epoch_logger_delta == 0 else 0
     
     model.train()
     for epoch in range(params['epochs']):
+        if epoch % 50 == 0:
+            data, masked_data, target_nodes = data_preprocess(config, data)
+        
         model.train()
         optimizer.zero_grad()
         
         pred, target_embeddings = model(data, masked_data, data.edge_index, target_nodes)
         # print(pred.shape, target_embeddings.shape)
         
-        loss = criterion(pred, target_embeddings.detach())
+        loss = 0
+        target_index = 0
+        for batch in pred:
+            batch_loss = 0
+            for pred_i in batch:
+                batch_loss += criterion(pred_i, target_embeddings[target_index].unsqueeze(0).detach())
+            
+            batch_loss /= len(batch)
+            loss += batch_loss
+            target_index += 1
         
         if verbose:
             if epoch % epoch_logger_delta == 0:
                 epoch_c = colored(epoch, 'blue')
-                loss_c = colored(loss.item(), 'magenta')
+                loss_c = colored(loss.item(), 'yellow')
                 print(f'Epoch: {epoch_c}, Loss: {loss_c}')
         
         loss.backward()
@@ -102,7 +114,7 @@ def driver(config_name):
     
     print("Best trial:")
     trial = study.best_trial
-    print(f"  Value: {trial.value}")
+    print(f"  Value: {colored(trial.value, 'green')}")
     print("  Params: ")
     for key, value in trial.params.items():
-        print(f"    {key}: {value}")
+        print(f"    {colored(key, 'light_blue')}: {colored(value, 'yellow')}")
