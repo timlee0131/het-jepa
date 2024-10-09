@@ -81,7 +81,7 @@ def linear_classifier(config, pretrained_representations, data, base=False, verb
 
         accuracy += accuracy_score(y_test.detach().numpy(), predictions)
     
-    avg_acc = round(accuracy / config.runs, 3)
+    avg_acc = round(accuracy / config.eval_runs, 3)
     if verbose:
         if base:
             avg_acc_c = colored(avg_acc, "green", attrs=["bold"])

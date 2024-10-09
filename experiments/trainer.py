@@ -74,6 +74,7 @@ def train(config, data, verbose=False):
             
         #     # batch_loss = criterion(batch, target_embedding.detach())
         #     loss += (batch_loss / (len(batch)))
+        optimizer.zero_grad()
         lr_scheduler.step()
         
         if verbose:

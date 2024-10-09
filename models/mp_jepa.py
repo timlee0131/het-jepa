@@ -23,7 +23,7 @@ class MP_JEPA(nn.Module):
         
         loss = 0
         for node in target_nodes:
-            sub_nodes, sub_edge_index, _,_ = k_hop_subgraph(int(node), num_hops=2, edge_index=data.edge_index, relabel_nodes=True)
+            sub_nodes, sub_edge_index, _,_ = k_hop_subgraph(int(node), num_hops=1, edge_index=data.edge_index, relabel_nodes=True)
             
             sub_context_embedding = context_embedding[sub_nodes]
 
