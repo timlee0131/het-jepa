@@ -18,7 +18,7 @@ def get_config():
     
     # creating the model
     config.loss_fn = 'mse'
-    config.hidden_channels = 10124
+    config.hidden_channels = 1024
     config.out_channels = 1024
     config.z_dim = 64
     config.ema = 0.999
@@ -27,10 +27,15 @@ def get_config():
     
     # training settings
     config.runs = 1
-    config.epochs = 500
-    config.lr = 0.001
-    config.min_lr = 0.0001
-    config.accumulations = 10
+    config.epochs = 1000
+    config.lr = 5e-3
+    config.min_lr = 1e-4
+    config.accumulations = 16
+    
+    config.warmup_steps = config.epochs * 0.05
+    config.total_steps = 100
+    config.restart_period = config.epochs
+    config.weight_decay = [1e-4, 1e-3, 1e-2]
     
     # eval settings
     config.eval_runs = 10

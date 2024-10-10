@@ -4,17 +4,17 @@ from torch_geometric.data import Data
 
 def sample_and_mask(x, target_percentage):
     tgt_idx = torch.multinomial(
-        torch.ones(x.size(0)),
+        torch.ones(x.size(0), device=x.device),
         max(int(target_percentage * x.size(0)), 1),
         replacement=False,
     )
 
     # replace target nodes with mask token
-    mask = torch.zeros(x.size(0), 1)
+    mask = torch.zeros(x.size(0), 1, device=x.device)
     mask[tgt_idx] = 1
 
     # mask is a random vector with the same mean and std as x
-    mask_token = torch.randn(1, x.size(-1)) * torch.std(
+    mask_token = torch.randn(1, x.size(-1), device=x.device) * torch.std(
         x
     ) + torch.mean(x)
     mask_tokens = mask_token.repeat(x.size(0), 1)
