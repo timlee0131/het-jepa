@@ -28,20 +28,7 @@ def get_dataset(config):
     
     return dataset
 
-def train(config, data, verbose=False):
-    # set up encoders and predictor
-    context_encoder = ContextEncoder(config.num_features, config.hidden_channels, config.out_channels).to(device)
-    target_encoder = TargetEncoder(config.num_features, config.hidden_channels, config.out_channels).to(device)
-    predictor = Predictor(config.out_channels + config.z_dim * 2, config.out_channels).to(device)
-    # predictor = Predictor(config.out_channels + config.pe_k, config.out_channels)
-    
-    model = MP_JEPA(context_encoder, target_encoder, predictor, z_dim=config.z_dim).to(device)
-    
-    pos_enc = data.laplacian_eigenvector_pe
-    
-    optimizer = torch.optim.Adam(model.parameters(), lr=config.lr)
-    criterion = nn.CosineEmbeddingLoss() if config.loss_fn == 'cosine' else nn.MSELoss()
-    # lr_scheduler = CosineAnnealingLR(optimizer, T_max=config.epochs, eta_min=config.min_lr)
+def get_schedulers(config):
     lr_scheduler = CosineDecayWithRestartsScheduler(
         max_val=config.lr,
         min_val=config.min_lr,
@@ -64,6 +51,23 @@ def train(config, data, verbose=False):
         total_steps=config.epochs,
         restart_period=config.epochs
     )
+    
+    return lr_scheduler, wd_scheduler, ema_scheduler
+
+def train(config, data, verbose=False):
+    # set up encoders and predictor
+    context_encoder = ContextEncoder(config.num_features, config.hidden_channels, config.out_channels).to(device)
+    target_encoder = TargetEncoder(config.num_features, config.hidden_channels, config.out_channels).to(device)
+    predictor = Predictor(config.out_channels + config.z_dim * 2, config.out_channels).to(device)
+    # predictor = Predictor(config.out_channels + config.pe_k, config.out_channels)
+    
+    model = MP_JEPA(context_encoder, target_encoder, predictor, z_dim=config.z_dim).to(device)
+    
+    pos_enc = data.laplacian_eigenvector_pe
+    
+    optimizer = torch.optim.Adam(model.parameters(), lr=config.lr)
+    criterion = nn.CosineEmbeddingLoss() if config.loss_fn == 'cosine' else nn.MSELoss()
+    lr_scheduler, wd_scheduler, ema_scheduler = get_schedulers(config)
     
     def update_lr(step):
         new_lr = lr_scheduler.get(step)
